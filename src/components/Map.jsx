@@ -1,26 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker, Polyline } from '@react-google-maps/api';
 
 const Map = (props) => {
 
-    // const googleMapRef = useRef(null);
+
 
     const { isLoaded } = props;
 
-    const [distances, setDistances] = useState([]);
-    const [durations, setDurations] = useState([]);
+    const [distance, setDistance] = useState(null);
+    const [duration, setDuration] = useState(null);
+    const nyabugogo = { lat: -1.939826787816454, lng: 30.0445426438232 };
+    const kimironko = { lat: -1.9365670876910166, lng: 30.13020167024439 };
+    const stopA = { lat: -1.9355377074007851, lng: 30.060163829002217 };
+
+    const [currentStopIndex, setCurrentStopIndex] = useState(0);
+
+    
 
     // Container style
     const containerStyle = {
-        width: "90vw",
+        width: "100%",
         height: "75vh"
     }
 
-    // const center = {
-    //     lat: -1.939826787816454,
-    //     lng: 30.0445426438232
-
-    // }
 
     const markers = [
         {
@@ -87,24 +89,35 @@ const Map = (props) => {
             }
         },
     ]
-
+   
 
     useEffect(() => {
-        const calculateDistances = async () => {
-            const results = [];
-            for (let i = 0; i < markers.length - 1; i++) {
-                const origin = markers[i].location;
-                const destination = markers[i + 1].location;
-                const response = await axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&key=${process.env.REACT_APP_MAPS_API_KEY}`);
-                const distance = response.data.rows[0].elements[0].distance.text;
-                const duration = response.data.rows[0].elements[0].duration.text;
-                results.push({ distance, duration });
-            }
-            setDistances(results.map(result => result.distance));
-            setDurations(results.map(result => result.duration));
+        const calculateDistance = async () => {
+            const service = new window.google.maps.DistanceMatrixService();
+            service.getDistanceMatrix(
+                {
+                    origins: [nyabugogo],
+                    destinations: [stopA],
+                    travelMode: 'DRIVING',
+                },
+                (response, status) => {
+                    if (status === 'OK') {
+                        setDistance(response.rows[0].elements[0].distance.text);
+                        setDuration(response.rows[0].elements[0].duration.text);
+                    } else {
+                        console.error('Error calculating distance:', status);
+                    }
+                }
+            );
         };
-        calculateDistances();
-    }, []);;
+        calculateDistance();
+    }, []);
+    
+    
+    
+
+    
+
 
     const onLoad = map => {
         console.log('map loaded:', map)
@@ -122,7 +135,14 @@ const Map = (props) => {
                         mapContainerStyle={containerStyle}
                         // center={center}
                         center={markers[0].location}
+
                         zoom={10}
+                        options={{
+                            fullscreenControl: false,
+                            mapTypeControl: false,
+                            streetViewControl: false,
+                            zoomControl: false,
+                        }}
                         onLoad={onLoad}
                         onUnmount={onUnmount}
                     >
@@ -138,23 +158,39 @@ const Map = (props) => {
 
                             );
                         })}
-                       
 
+<Polyline
+                        path={markers.map(marker => marker.location)}
+                        options={{
+                            strokeColor: '#0000FF',
+                            strokeOpacity: 1.0,
+                            strokeWeight: 4,
+                        }}
+                    />
 
 
                     </GoogleMap>
 
 
                 </div>
-                <div className="absolute w-1/6 text-center top-2 left-2 bg-white p-2 shadow-md">
+                <div className="absolute w-1/4 text-center top-2 left-2 bg-white p-2 shadow-md">
                     <div className="mt-4 pt-10">
-                        <h3>Next Stop: </h3>
-                        {distances.map((distance, index) => (
-                            <div key={index}>
-                                <p>Distance: {distance}</p>
-                                <p>Duration: {durations[index]}</p>
-                            </div>
-                        ))}
+                        <h4 className=' text-xl font-semibold'>Nyabugogo- Kimironko</h4>
+                        {currentStopIndex < markers.length - 1 ? (
+                        <>
+                            <p>Next Stop: {markers[currentStopIndex + 1].name}</p>
+                            
+                        </>
+                    ) : (
+                        <p>End of the route</p>
+                    )}
+                        
+                        
+                        {/* <p>Distance: {distance}  Duration: {duration}</p> */}
+                        {/* <p>Duration: {duration}</p> */}
+                        <p>Distance: {distance}</p>
+                        <p>Duration: {duration}</p>
+                       
                     </div>
                 </div>
             </>
