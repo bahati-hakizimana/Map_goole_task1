@@ -112,6 +112,7 @@ const Map = (props) => {
         };
         calculateDistance();
     }, []);
+
     
     
     
@@ -186,8 +187,7 @@ const Map = (props) => {
                     )}
                         
                         
-                        {/* <p>Distance: {distance}  Duration: {duration}</p> */}
-                        {/* <p>Duration: {duration}</p> */}
+                     
                         <p>Distance: {distance}</p>
                         <p>Duration: {duration}</p>
                        
