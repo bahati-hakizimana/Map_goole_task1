@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleMap, Marker, Polyline } from '@react-google-maps/api';
+import { GoogleMap, Marker, Polyline, DistanceMatrixService } from '@react-google-maps/api';
+import axios from 'axios';
 
 const Map = (props) => {
 
@@ -7,15 +8,15 @@ const Map = (props) => {
 
     const { isLoaded } = props;
 
-    const [distance, setDistance] = useState(null);
-    const [duration, setDuration] = useState(null);
+    // const [distance, setDistance] = useState(null);
+    // const [duration, setDuration] = useState(null);
     const nyabugogo = { lat: -1.939826787816454, lng: 30.0445426438232 };
     const kimironko = { lat: -1.9365670876910166, lng: 30.13020167024439 };
     const stopA = { lat: -1.9355377074007851, lng: 30.060163829002217 };
 
     const [currentStopIndex, setCurrentStopIndex] = useState(0);
 
-    
+
 
     // Container style
     const containerStyle = {
@@ -89,35 +90,76 @@ const Map = (props) => {
             }
         },
     ]
-   
 
-    useEffect(() => {
-        const calculateDistance = async () => {
-            const service = new window.google.maps.DistanceMatrixService();
-            service.getDistanceMatrix(
-                {
-                    origins: [nyabugogo],
-                    destinations: [stopA],
-                    travelMode: 'DRIVING',
-                },
-                (response, status) => {
-                    if (status === 'OK') {
-                        setDistance(response.rows[0].elements[0].distance.text);
-                        setDuration(response.rows[0].elements[0].duration.text);
-                    } else {
-                        console.error('Error calculating distance:', status);
-                    }
-                }
-            );
-        };
-        calculateDistance();
-    }, []);
 
+    function deg2rad(deg) {
+        return deg * (Math.PI / 180);
+    }
+    
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the earth in km
+        const dLat = deg2rad(lat2 - lat1);
+        const dLon = deg2rad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const d = R * c; // Distance in km
+        return d;
+    }
+    
+    const distance = calculateDistance(
+        nyabugogo.lat,
+        nyabugogo.lng,
+        stopA.lat,
+        stopA.lng
+    );
+    
+    console.log('Distance:', distance);
+
+    const averageSpeed = 60; // in km/h
+const duration = distance / averageSpeed; // in hours
+
+console.log('Duration:', duration);
+    
+
+
+    // useEffect(() => {
+    //     console.log('Calculating distance...');
+    //     const calculateDistance = async () => {
+    //         console.log('Nyabugogo:', nyabugogo);
+    //         console.log('StopA:', stopA);
+            
+    //         const service = new window.google.maps.DistanceMatrixService();
+    //         service.getDistanceMatrix(
+    //             {
+    //                 origins: [nyabugogo],
+    //                 destinations: [stopA], 
+    //                 travelMode: 'DRIVING',
+    //             },
+    //             (response, status) => {
+    //                 if (status === 'OK') {
+    //                     console.log('Response:', response);
+    //                     setDistance(response.rows[0].elements[0].distance.text);
+    //                     setDuration(response.rows[0].elements[0].duration.text);
+    //                 } else {
+    //                     console.error("Error fetching distance:", status)
+    //                 }
+    //             }
+    //         );
+    //     };
+    //     calculateDistance();
+    // }, []);
     
     
     
 
-    
+
+
+
+
+
 
 
     const onLoad = map => {
@@ -134,7 +176,6 @@ const Map = (props) => {
                 <div className="mt-4 flex items-center justify-center">
                     <GoogleMap
                         mapContainerStyle={containerStyle}
-                        // center={center}
                         center={markers[0].location}
 
                         zoom={10}
@@ -160,14 +201,14 @@ const Map = (props) => {
                             );
                         })}
 
-<Polyline
-                        path={markers.map(marker => marker.location)}
-                        options={{
-                            strokeColor: '#0000FF',
-                            strokeOpacity: 1.0,
-                            strokeWeight: 4,
-                        }}
-                    />
+                        <Polyline
+                            path={markers.map(marker => marker.location)}
+                            options={{
+                                strokeColor: '#0000FF',
+                                strokeOpacity: 1.0,
+                                strokeWeight: 4,
+                            }}
+                        />
 
 
                     </GoogleMap>
@@ -178,19 +219,19 @@ const Map = (props) => {
                     <div className="mt-4 pt-10">
                         <h4 className=' text-xl font-semibold'>Nyabugogo- Kimironko</h4>
                         {currentStopIndex < markers.length - 1 ? (
-                        <>
-                            <p>Next Stop: {markers[currentStopIndex + 1].name}</p>
-                            
-                        </>
-                    ) : (
-                        <p>End of the route</p>
-                    )}
-                        
-                        
-                     
+                            <>
+                                <p>Next Stop: {markers[currentStopIndex + 1].name}</p>
+
+                            </>
+                        ) : (
+                            <p>End of the route</p>
+                        )}
+
+
+
                         <p>Distance: {distance}</p>
                         <p>Duration: {duration}</p>
-                       
+
                     </div>
                 </div>
             </>
