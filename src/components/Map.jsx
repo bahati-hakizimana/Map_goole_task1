@@ -22,7 +22,6 @@ const Map = (props) => {
         { name: "StopE", location: { lat: -1.9487480402200394, lng: 30.126596781356923 } },
         { name: "Kimironko", location: kimironko }
     ];
-
     useEffect(() => {
         const storedCurrentLocationIndex = localStorage.getItem('currentLocationIndex');
         if (storedCurrentLocationIndex) {
