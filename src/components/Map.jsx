@@ -34,28 +34,26 @@ const Map = (props) => {
             setEstimatedTime(JSON.parse(storedEstimatedTime));
         }
 
-        if (!window.google || !window.google.maps || !window.google.maps.geometry || !window.google.maps.geometry.spherical) return;
+        (async function () {
+            const { spherical } = await window.google.maps.importLibrary("geometry");
 
-        const { spherical } = window.google.maps.geometry;
+            const estimatedTimes = markers.map((marker, index) => {
+                if (index === 0) {
+                    return 0;
+                }
 
-        if (!spherical) return;
+                const distanceToStop = spherical.computeDistanceBetween(
+                    new window.google.maps.LatLng(markers[index - 1].location),
+                    new window.google.maps.LatLng(marker.location)
+                );
+                const estimatedTimeToStop = distanceToStop / (averageSpeed * 1000 / 3600);
 
-        const estimatedTimes = markers.map((marker, index) => {
-            if (index === 0) {
-                return 0;
-            }
+                return Math.round(estimatedTimeToStop / 60);
+            });
 
-            const distanceToStop = spherical.computeDistanceBetween(
-                new window.google.maps.LatLng(markers[index - 1].location),
-                new window.google.maps.LatLng(marker.location)
-            );
-            const estimatedTimeToStop = distanceToStop / (averageSpeed * 1000 / 3600);
-
-            return Math.round(estimatedTimeToStop / 60); 
-        });
-
-        setEstimatedTime(estimatedTimes);
-        localStorage.setItem('estimatedTime', JSON.stringify(estimatedTimes));
+            setEstimatedTime(estimatedTimes);
+            localStorage.setItem('estimatedTime', JSON.stringify(estimatedTimes));
+        })()
 
     }, []);
 
@@ -74,10 +72,10 @@ const Map = (props) => {
             if (currentLocationIndex < markers.length - 1) {
                 setCurrentLocationIndex(currentLocationIndex + 1);
             } else {
-                setCurrentLocation(markers[markers.length - 1].location); 
-                setCurrentLocationIndex(markers.length); 
+                setCurrentLocation(markers[markers.length - 1].location);
+                setCurrentLocationIndex(markers.length);
             }
-        }, 5000); 
+        }, 5000);
 
         return () => clearInterval(interval);
     }, [currentLocationIndex]);
@@ -95,9 +93,9 @@ const Map = (props) => {
                     center={nyabugogo}
 
                     options={{
-                        zoomControl:false,
+                        zoomControl: false,
                         mapTypeControl: false,
-                        fullscreenControl:false
+                        fullscreenControl: false
                     }}
                     zoom={12}
                 >
