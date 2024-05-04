@@ -65,3 +65,8 @@ The driver's current location is updated every 5 seconds to simulate movement al
 The ETA for the next stop is displayed on the map.
 The real-time ride-share tracking map provides a simple yet effective solution for tracking the driver's location and EAt.
 By leveraging the Google Maps API and React.js, the application delivers a seamless user experience for both drivers and passengers.
+
+### Live Site on fly.io
+
+
+``https://google-map-task.fly.dev/ ``
