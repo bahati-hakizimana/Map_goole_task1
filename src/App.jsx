@@ -17,7 +17,7 @@ function App() {
     <>
       <Header />
       <Map isLoaded={isLoaded} />
-      {/* <Footer /> */}
+      <Footer />
     </>
   )
 }
